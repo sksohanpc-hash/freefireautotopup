@@ -34,7 +34,7 @@ app.post('/purchase', async (req, res) => {
             "code": voucher.toString()
         }, {
             headers: { 
-                "Authorization": "Ca968e2c-60fc-4855-85d9-a7eab46ec4fd", // আপনার দেওয়া টোকেন বসানো হয়েছে
+                "Authorization": "ca968e2c-60fc-4855-85d9-a7eab46ec4fd", // আপনার দেওয়া টোকেন বসানো হয়েছে
                 "Content-Type": "application/json"
             }
         });
