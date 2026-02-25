@@ -5,45 +5,59 @@ const app = express();
 app.use(express.json());
 
 app.post('/purchase', async (req, res) => {
-    console.log("--- নতুন অর্ডার রিসিভ হয়েছে ---");
+    console.log("\n--- নতুন অর্ডার রিসিভ হয়েছে ---");
     
-    // ১. প্যানেল থেকে আসা ডাটাগুলো ভেরিয়েবলে জমা করা
-    const player_id = req.body.playerid || req.body.player_id || req.body.uid;
+    // প্যানেল থেকে আসা ডাটা সংগ্রহ
+    const player_id = req.body.player_id || req.body.playerid || req.body.uid;
     const voucher = req.body.voucher || req.body.code || req.body.pin;
-    const order_id = req.body.orderid || req.body.order_id || req.body.id;
+    const order_id = req.body.order_id || req.body.orderid || "TEST-" + Date.now();
     
-    // ২. প্যাকেজ নাম ধরার জন্য এই নতুন লাইনটি যোগ করা হয়েছে
-    const package_name = req.body.product_name || req.body.package || req.body.item_name || "Unknown Package";
+    // প্যাকেজ নাম (এটি শুধু আপনার টার্মিনালে দেখার জন্য)
+    const package_name = req.body.product_name || req.body.package || "Unknown Package";
 
-    // ৩. টার্মিনালে সব তথ্য প্রিন্ট করা
-    console.log(`অর্ডার আইডি: ${order_id}`);
-    console.log(`প্লেয়ার আইডি: ${player_id}`);
-    console.log(`প্যাকেজ নাম: ${package_name}`); // এখন এটি '25 diamond' দেখাবে
-    console.log(`ভাউচার কোড: ${voucher}`);
+    console.log(`অর্ডার আইডি  : ${order_id}`);
+    console.log(`প্লেয়ার আইডি : ${player_id}`);
+    console.log(`প্যাকেজ নাম  : ${package_name}`);
+    console.log(`ভাউচার কোড  : ${voucher}`);
+
+    // ডাটা চেক করা
+    if (!player_id || !voucher) {
+        console.log("ভুল: প্লেয়ার আইডি বা ভাউচার কোড পাওয়া যায়নি!");
+        return res.status(400).json({ status: "error", message: "Missing PlayerID or Voucher" });
+    }
 
     try {
-        // UcBot Sync API লিঙ্ক
+        // UcBot Sync API-তে রিকোয়েস্ট পাঠানো
         const response = await axios.post('http://api.ucbot.store/topup-sync', {
-            "orderid": order_id || Date.now().toString(),
-            "playerid": player_id,
-            "code": voucher 
+            "orderid": order_id.toString(),
+            "playerid": player_id.toString(),
+            "code": voucher.toString()
         }, {
             headers: { 
-                "Authorization": "আপনার_আসল_টোকেন_এখানে_দিন", // এখানে আপনার টেলিগ্রাম থেকে পাওয়া টোকেন বসান
+                "Authorization": "ca968e2c-60fc-4855-85d9-a7eab46ec4fd", // টেলিগ্রাম থেকে পাওয়া টোকেনটি এখানে দিন
                 "Content-Type": "application/json"
             }
         });
 
-        console.log("API সফল রেসপন্স:", response.data);
+        // সফল হলে টার্মিনালে রেজাল্ট দেখানো
+        console.log("API রেসপন্স:", JSON.stringify(response.data));
         res.status(200).json(response.data);
 
     } catch (error) {
         console.error("অর্ডারটি ব্যর্থ হয়েছে!");
         if (error.response) {
-            console.log("API Error Message:", error.response.data);
+            console.log("API এরর মেসেজ:", JSON.stringify(error.response.data));
+            res.status(error.response.status).json(error.response.data);
+        } else {
+            console.log("Error:", error.message);
+            res.status(500).send("Network Error");
         }
-        res.status(500).send("API Error");
     }
 });
 
-app.listen(3000, () => console.log("বট নতুন সিঙ্ক মোডে চালু হয়েছে! পোর্ট: 3000"));
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`====================================`);
+    console.log(`বট চালু হয়েছে! পোর্ট: ${PORT}`);
+    console.log(`====================================`);
+});
