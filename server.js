@@ -7,24 +7,29 @@ app.use(express.json());
 app.post('/purchase', async (req, res) => {
     console.log("--- নতুন অর্ডার রিসিভ হয়েছে ---");
     
-    // প্যানেল থেকে আসা ডাটা রিসিভ করা
-    const player_id = req.body.player_id || req.body.playerid || req.body.uid;
+    // ১. প্যানেল থেকে আসা ডাটাগুলো ভেরিয়েবলে জমা করা
+    const player_id = req.body.playerid || req.body.player_id || req.body.uid;
     const voucher = req.body.voucher || req.body.code || req.body.pin;
-    const order_id = req.body.order_id || req.body.orderid || req.body.id;
+    const order_id = req.body.orderid || req.body.order_id || req.body.id;
+    
+    // ২. প্যাকেজ নাম ধরার জন্য এই নতুন লাইনটি যোগ করা হয়েছে
+    const package_name = req.body.product_name || req.body.package || req.body.item_name || "Unknown Package";
 
+    // ৩. টার্মিনালে সব তথ্য প্রিন্ট করা
     console.log(`অর্ডার আইডি: ${order_id}`);
     console.log(`প্লেয়ার আইডি: ${player_id}`);
+    console.log(`প্যাকেজ নাম: ${package_name}`); // এখন এটি '25 diamond' দেখাবে
     console.log(`ভাউচার কোড: ${voucher}`);
 
     try {
-        // আপনার দেওয়া নতুন সিঙ্ক (Sync) API লিঙ্ক
+        // UcBot Sync API লিঙ্ক
         const response = await axios.post('http://api.ucbot.store/topup-sync', {
             "orderid": order_id || Date.now().toString(),
             "playerid": player_id,
-            "code": voucher // এখানে প্যাকেজ পাঠানোর প্রয়োজন নেই
+            "code": voucher 
         }, {
             headers: { 
-                "Authorization": "আপনার_আসল_টোকেন_এখানে_দিন", // এখানে আপনার টোকেন বসান
+                "Authorization": "আপনার_আসল_টোকেন_এখানে_দিন", // এখানে আপনার টেলিগ্রাম থেকে পাওয়া টোকেন বসান
                 "Content-Type": "application/json"
             }
         });
